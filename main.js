@@ -2,9 +2,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { PythonShell } = require('python-shell');
+const { spawn } = require('child_process'); // 引入 spawn
 
 // 判断是否为开发环境
 const isDev = !app.isPackaged;
+let pyServer; // 用于持有 Python 服务器进程
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -30,7 +32,49 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow);
+// 启动 FastAPI 服务器
+function startPythonServer() {
+  // 根据平台确定 uvicorn 可执行文件的路径
+  const uvicornExecutable = process.platform === 'win32' ? 'uvicorn.exe' : 'uvicorn';
+
+  const serverExecutable = isDev
+    ? path.join(__dirname, 'python_env', 'bin', uvicornExecutable)
+    : path.join(process.resourcesPath, 'python_env', 'bin', uvicornExecutable);
+
+  // FastAPI 脚本的路径
+  // const scriptPath = path.join(isDev ? __dirname : process.resourcesPath, 'backend', 'main:app');
+  
+  pyServer = spawn(serverExecutable, [
+    'backend.main:app', // 指向 FastAPI 应用实例
+    '--host', '127.0.0.1',
+    '--port', '8000'
+  ], {
+    // 指定工作目录，这样 python 才能找到 backend.main
+    cwd: isDev ? __dirname : process.resourcesPath,
+  });
+
+  pyServer.stdout.on('data', (data) => {
+    console.log(`FastAPI stdout: ${data}`);
+  });
+
+  pyServer.stderr.on('data', (data) => {
+    console.error(`FastAPI stderr: ${data}`);
+  });
+}
+
+app.whenReady().then(() => {
+  startPythonServer();
+  createWindow();
+});
+
+// 在应用退出前，确保关闭 Python 服务器
+app.on('will-quit', () => {
+  if (pyServer) {
+    console.log('Killing FastAPI server...');
+    pyServer.kill();
+    pyServer = null;
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
