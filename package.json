@@ -1,0 +1,44 @@
+{
+  "name": "electron-vite-python-demo",
+  "version": "1.0.0",
+  "description": "A minimal demo for Electron + Vite + Python",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "npm run dev:vite & npm run dev:electron",
+    "dev:vite": "cd frontend && npm run dev",
+    "dev:electron": "electron .",
+    "build": "npm run build:vite && npm run build:electron",
+    "build:vite": "cd frontend && npm run build",
+    "build:electron": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "python-shell": "^5.0.0"
+  },
+  "build": {
+    "appId": "com.example.electron-vite-python",
+    "productName": "ElectronVitePythonDemo",
+    "files": [
+      "main.js",
+      "preload.js",
+      "frontend/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    }
+  }
+}
