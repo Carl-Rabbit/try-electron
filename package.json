@@ -35,6 +35,10 @@
       {
         "from": "backend",
         "to": "backend"
+      },
+      {
+        "from": "python_env",
+        "to": "python_env"
       }
     ],
     "directories": {

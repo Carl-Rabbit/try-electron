@@ -53,10 +53,15 @@ const pythonScriptPath = isDev
   ? path.join(__dirname, 'backend')
   : path.join(process.resourcesPath, 'backend');
 
+// 动态决定使用哪个 python 解释器
+const pythonExecutable = isDev
+  ? 'python3' // 开发时，直接用系统的 python3
+  : path.join(process.resourcesPath, 'python_env', 'bin', 'python'); // 打包后，使用我们内置的 python
+
 ipcMain.handle('run-python', async (event, args) => {
   const options = {
     mode: 'json', // 将 Python 的输出解析为 JSON
-    pythonPath: 'python', // 或者指定你的 python.exe/python3 的绝对路径
+    pythonPath: pythonExecutable, // 或者指定你的 python.exe/python3 的绝对路径
     scriptPath: pythonScriptPath, // Python 脚本所在的目录
     args: [], // 如果需要向 Python 传递参数，放在这里
   };
